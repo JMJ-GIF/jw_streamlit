@@ -1,11 +1,13 @@
+import os
+
+
 import gspread
 import pandas as pd
+import streamlit as st
 from google.oauth2.service_account import Credentials
 
 
 def get_dataframe_from_gs():
-    # 서비스 계정 키 파일 경로
-    SERVICE_ACCOUNT_FILE = 'secret.json'
     SCOPES = [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive',
@@ -13,24 +15,24 @@ def get_dataframe_from_gs():
     SHEET_KEY = '1UiUtEfS8yzPanipxC1J1ux2tWzqrjYo3zeuCF0JEuMk'
     SHEET_NAME = 'stat_final'
 
-    creds = Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
-
+    if "google" in st.secrets:
+        creds = Credentials.from_service_account_info(st.secrets["google"], scopes=SCOPES)
+    else:
+        creds = Credentials.from_service_account_file('secret.json', scopes=SCOPES)
+    
     # gspread 클라이언트 생성
     client = gspread.authorize(creds)
 
-    # 시트 열기 (URL 또는 이름 사용 가능)
+    # 시트 열기
     spreadsheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SHEET_KEY}/edit')
-    worksheet = spreadsheet.worksheet(SHEET_NAME) 
+    worksheet = spreadsheet.worksheet(SHEET_NAME)
 
     # 전체 데이터 가져오기
-    data = worksheet.get_all_records() 
+    data = worksheet.get_all_records()
+    df = pd.DataFrame(data)
 
-    # 확인용 출력
-    df = pd.DataFrame(data)    
-    
     return df
+
 
 def clean_dataframe(df):
     
