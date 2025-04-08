@@ -1,6 +1,3 @@
-import os
-
-
 import gspread
 import pandas as pd
 import streamlit as st
@@ -13,7 +10,7 @@ def get_dataframe_from_gs():
         'https://www.googleapis.com/auth/drive',
     ]
     SHEET_KEY = '1UiUtEfS8yzPanipxC1J1ux2tWzqrjYo3zeuCF0JEuMk'
-    SHEET_NAME = 'stat_final'
+    SHEET_NAME = '수합 툴'
 
     if "google" in st.secrets:
         creds = Credentials.from_service_account_info(st.secrets["google"], scopes=SCOPES)
@@ -40,7 +37,7 @@ def clean_dataframe(df):
         df['날짜'] = pd.to_datetime(df['날짜'], format="%Y.%m.%d")
 
     # 제외할 열 목록
-    exclude_cols = ["날짜", "학년", "반", "번호", "이름", "성별"]
+    exclude_cols = ["날짜", "학년", "반", "번호", "이름", "성별", "팀"]
 
     # 가공 대상 컬럼들만 선택
     target_cols = [col for col in df.columns if col not in exclude_cols]
