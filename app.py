@@ -1,11 +1,11 @@
 import pandas as pd
 import streamlit as st
-from load_data import get_dataframe_from_gs, clean_dataframe
+from load_data import get_target_sheets_combined_df, clean_dataframe
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import plotly.express as px
 
 LEVEL = ['학년', '반', '팀', '성별', '개인']
-NUMERIC_COLS = ['수비 성공', '패스 시도', '공격 시도']
+NUMERIC_COLS = ['수비성공', '패스시도', '공격시도']
 
 st.set_page_config(page_title="JFLH 츄크볼", layout="wide")
 st.title("🏐 2025. JFLH 츄크볼 리그전 누가기록")
@@ -17,7 +17,7 @@ if 'df' not in st.session_state:
 # --- 데이터 불러오기 버튼 ---
 if st.button("📥 데이터 가져오기"):
     try:
-        df = get_dataframe_from_gs()  # 구글 스프레드시트에서 불러오기
+        df = get_target_sheets_combined_df()  # 구글 스프레드시트에서 불러오기
         df = clean_dataframe(df)      # 전처리
         st.session_state.df = df      # 세션에 저장
         st.success("데이터를 성공적으로 불러왔습니다.")
@@ -44,10 +44,17 @@ if df is not None:
  
     if selected_tab != '개인':
         if selected_tab in df.columns:
-
+            
             # --- 집계 ---
-            grouped = df.groupby(selected_tab)[NUMERIC_COLS].sum().reset_index()
-            grouped[NUMERIC_COLS] = grouped[NUMERIC_COLS].astype(int)
+            if selected_tab == '반':
+                # 새로운 컬럼 생성: 예) '1 - 1'
+                df['학년 - 반'] = df['학년'].astype(str) + ' - ' + df['반'].astype(str)
+                grouped = df.groupby('학년 - 반')[NUMERIC_COLS].sum().reset_index()
+                grouped[NUMERIC_COLS] = grouped[NUMERIC_COLS].astype(int)
+            else:
+                grouped = df.groupby(selected_tab)[NUMERIC_COLS].sum().reset_index()
+                grouped[NUMERIC_COLS] = grouped[NUMERIC_COLS].astype(int)
+
 
             # --- AgGrid 스타일 빌더 ---
             gb = GridOptionsBuilder.from_dataframe(grouped)
